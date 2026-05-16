@@ -35,7 +35,7 @@ jobs:
           echo "No hay carpeta ./db en el repo; se omitirá el build y se usará la imagen en ECR definida en ECR_REPO_URL_DB"
         fi
 
-  - name: Desplegar DB vía SSM (pull desde ECR)
+    - name: Desplegar DB vía SSM (pull desde ECR)
       run: |
         aws ssm send-command \
           --instance-ids ${{ secrets.EC2_DB_INSTANCE_ID }} \

@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout código
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Configurar credenciales AWS
+    - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -23,16 +23,16 @@ jobs:
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login en Amazon ECR (runner)
+    - name: ECR login
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build imagen Backend Ventas y push a ECR
+    - name: Build backend-ventas and push to ECR
       run: |
         docker build -t tienda-backend-ventas ./back-Ventas_SpringBoot/Springboot-API-REST
         docker tag tienda-backend-ventas:latest ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest
         docker push ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest
 
-  - name: Desplegar Backend Ventas vía SSM
+    - name: Deploy backend-ventas via SSM
       run: |
         aws ssm send-command \
           --instance-ids ${{ secrets.EC2_BACKEND_VENTAS_INSTANCE_ID }} \
@@ -44,17 +44,17 @@ jobs:
             "docker pull ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest",
             "docker stop tienda-backend-ventas || true",
             "docker rm tienda-backend-ventas || true",
-            "docker run -d --name tienda-backend-ventas -p 8080:8080 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
+            "docker run -d --name tienda-backend-ventas -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
           ]}' \
           --output text
 
-    - name: Build imagen Backend Despachos y push a ECR
+    - name: Build backend-despachos and push to ECR
       run: |
         docker build -t tienda-backend-despachos ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
         docker tag tienda-backend-despachos:latest ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest
         docker push ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest
 
-  - name: Desplegar Backend Despachos vía SSM
+    - name: Deploy backend-despachos via SSM
       run: |
         aws ssm send-command \
           --instance-ids ${{ secrets.EC2_BACKEND_DESPACHOS_INSTANCE_ID }} \
