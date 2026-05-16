@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "frontend/**"
+      - "front_despacho/**"
 
 jobs:
   build-push-deploy-frontend:
@@ -27,8 +27,8 @@ jobs:
 
     - name: Build imagen Frontend y push a ECR
       run: |
-        cd frontend
-        docker build -t tienda-frontend .
+        # build desde el contexto real del proyecto
+        docker build -t tienda-frontend ./front_despacho
         docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
