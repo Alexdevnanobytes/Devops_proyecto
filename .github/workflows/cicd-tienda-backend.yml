@@ -44,7 +44,7 @@ jobs:
             "docker pull ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest",
             "docker stop tienda-backend-ventas || true",
             "docker rm tienda-backend-ventas || true",
-            "docker run -d --name tienda-backend-ventas -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
+            "docker run -d --name tienda-backend-ventas -p 8080:8080 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
           ]}' \
           --output text
 
