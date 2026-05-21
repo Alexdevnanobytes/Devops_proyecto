@@ -40,7 +40,7 @@ jobs:
           --comment "Actualizar tienda-backend-ventas desde ECR" \
           --parameters '{"commands":[
             "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin $(echo ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }} | cut -d/ -f1)",
             "sudo docker pull ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest",
             "sudo docker stop tienda-backend-ventas || true",
             "sudo docker rm tienda-backend-ventas || true",
@@ -62,7 +62,7 @@ jobs:
           --comment "Actualizar tienda-backend-despachos desde ECR" \
           --parameters '{"commands":[
             "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin $(echo ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }} | cut -d/ -f1)",
             "sudo docker pull ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest",
             "sudo docker stop tienda-backend-despachos || true",
             "sudo docker rm tienda-backend-despachos || true",
