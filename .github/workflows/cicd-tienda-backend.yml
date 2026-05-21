@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main", "deploy" ]
     paths:
+      - ".github/workflows/**"
       - "back-Ventas_SpringBoot/**"
       - "back-Despachos_SpringBoot/**"
 
