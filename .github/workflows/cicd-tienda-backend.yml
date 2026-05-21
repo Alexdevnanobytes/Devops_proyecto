@@ -45,7 +45,7 @@ jobs:
             "sudo docker pull ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest",
             "sudo docker stop tienda-backend-ventas || true",
             "sudo docker rm tienda-backend-ventas || true",
-            "sudo docker run -d --name tienda-backend-ventas -p 8080:8080 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
+            "sudo docker run -d -e DB_ENDPOINT=${{ secrets.DB_ENDPOINT }} -e DB_PORT=${{ secrets.DB_PORT }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USERNAME=${{ secrets.DB_USERNAME }} -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} --name tienda-backend-ventas -p 8080:8080 ${{ secrets.ECR_REPO_URL_BACKEND_VENTAS }}:latest"
           ]}' \
           --output text
 
@@ -67,6 +67,6 @@ jobs:
             "sudo docker pull ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest",
             "sudo docker stop tienda-backend-despachos || true",
             "sudo docker rm tienda-backend-despachos || true",
-            "sudo docker run -d --name tienda-backend-despachos -p 8081:8081 ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest"
+            "sudo docker run -d -e DB_ENDPOINT=${{ secrets.DB_ENDPOINT }} -e DB_PORT=${{ secrets.DB_PORT }} -e DB_NAME=${{ secrets.DB_NAME }} -e DB_USERNAME=${{ secrets.DB_USERNAME }} -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} --name tienda-backend-despachos -p 8081:8081 ${{ secrets.ECR_REPO_URL_BACKEND_DESPACHOS }}:latest"
           ]}' \
           --output text
