@@ -26,15 +26,14 @@ jobs:
     - name: Login en Amazon ECR (runner)
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build imagen DB y push a ECR (solo si existe ./db)
+    - name: Generar y empujar imagen MySQL a ECR
       run: |
-        if [ -d "db" ]; then
-          docker build -t tienda-db ./db
-          docker tag tienda-db:latest ${{ secrets.ECR_REPO_URL_DB }}:latest
-          docker push ${{ secrets.ECR_REPO_URL_DB }}:latest
-        else
-          echo "No hay carpeta ./db en el repo; se omitirá el build y se usará la imagen en ECR definida en ECR_REPO_URL_DB"
-        fi
+        echo "Descargando imagen oficial de mysql temporalmente al runner..."
+        docker pull mysql:8.0
+        echo "Etiquetándola para nuestro ECR privado..."
+        docker tag mysql:8.0 ${{ secrets.ECR_REPO_URL_DB }}:latest
+        echo "Subiendo imagen al ECR para que la DB privada pueda descargarla..."
+        docker push ${{ secrets.ECR_REPO_URL_DB }}:latest
 
     - name: Desplegar DB vía SSM (pull desde ECR)
       run: |
@@ -44,10 +43,10 @@ jobs:
           --comment "Actualizar tienda-db desde ECR" \
           --parameters '{"commands":[
             "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin $(echo ${{ secrets.ECR_REPO_URL_DB }} | cut -d/ -f1)",
+            "aws ecr get-login-password --region '\''${{ secrets.AWS_REGION }}'\'' | sudo docker login --username AWS --password-stdin $(echo ${{ secrets.ECR_REPO_URL_DB }} | cut -d/ -f1)",
             "sudo docker pull ${{ secrets.ECR_REPO_URL_DB }}:latest",
             "sudo docker stop tienda-db || true",
             "sudo docker rm tienda-db || true",
-            "sudo docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
+            "sudo docker run -d --name tienda-db -p 3306:3306 -e MYSQL_DATABASE=${{ secrets.DB_NAME }} -e MYSQL_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }} -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
           ]}' \
           --output text
