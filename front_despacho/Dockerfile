@@ -1,11 +1,15 @@
-From node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
-workdir /app
+WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
 
-COPY . . 
+COPY . .
+
+ARG VITE_API_VENTAS
+ENV VITE_API_VENTAS=$VITE_API_VENTAS
+
 RUN npm run build
 
 FROM nginx:alpine
@@ -18,12 +22,10 @@ RUN printf 'server {\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\
 \n\
-    # Redirige todo al index.html para que React Router funcione\n\
     location / {\n\
         try_files $uri $uri/ /index.html;\n\
     }\n\
 \n\
-    # Cache para assets estáticos\n\
     location ~* \\.(?:ico|css|js|gif|jpe?g|png|woff2?)$ {\n\
         expires 6M;\n\
         access_log off;\n\
@@ -31,5 +33,5 @@ RUN printf 'server {\n\
     }\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
