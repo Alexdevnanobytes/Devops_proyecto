@@ -28,8 +28,10 @@ jobs:
 
     - name: Build imagen Frontend y push a ECR
       run: |
-        # build desde el contexto real del proyecto
-        docker build -t tienda-frontend ./front_despacho
+        docker build \
+          --build-arg VITE_API_VENTAS=${{ secrets.VITE_API_VENTAS }} \
+          -t tienda-frontend ./front_despacho
+        
         docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
