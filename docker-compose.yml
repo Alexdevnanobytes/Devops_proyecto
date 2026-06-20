@@ -3,14 +3,14 @@ services:
     build: ./front_despacho
     container_name: frontend
     ports:
-      - "80:80"
+      - "8082:80"
 
     depends_on:
       - backend-ventas
       - backend-despachos
 
   backend-ventas:
-    build: ./back-Ventas_SpringBoot
+    build: ./back-Ventas_SpringBoot/Springboot-API-REST
     container_name: backend-ventas
     ports:
       - "8080:8080"
@@ -23,7 +23,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
 
   backend-despachos:
-    build: ./back-Despachos_SpringBoot
+    build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
     container_name: backend-despachos
     ports:
       - "8081:8081"
