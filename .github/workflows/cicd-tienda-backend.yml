@@ -2,7 +2,7 @@ name: CI/CD Tienda Perritos - Backend
 
 on:
   push:
-    branches: [ "main", "deploy" ]
+    branches: [ "main" ]
     paths:
       - ".github/workflows/**"
       - "back-Ventas_SpringBoot/**"
