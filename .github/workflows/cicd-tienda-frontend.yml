@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/**"
       - "front_despacho/**"
+  workflow_dispatch:
 
 jobs:
   build-push-deploy-frontend:
