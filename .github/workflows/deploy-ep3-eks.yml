@@ -1,0 +1,103 @@
+name: EP3 Deploy Tienda Perritos to EKS
+
+on:
+  push:
+    branches:
+      - ep3-eks-cicd
+    paths:
+      - "ep3-tienda-perritos/**"
+      - ".github/workflows/deploy-ep3-eks.yml"
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: devopseks
+  NAMESPACE: tienda
+  PROJECT_DIR: ep3-tienda-perritos
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Obtener Account ID y ECR URL
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ECR_URL=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Login en Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin $ECR_URL
+
+      - name: Build y push Frontend
+        run: |
+          docker build -t tienda-frontend ./$PROJECT_DIR/frontend
+          docker tag tienda-frontend:latest $ECR_URL/tienda-frontend:${{ github.sha }}
+          docker push $ECR_URL/tienda-frontend:${{ github.sha }}
+
+      - name: Build y push Backend
+        run: |
+          docker build -t tienda-backend ./$PROJECT_DIR/backend
+          docker tag tienda-backend:latest $ECR_URL/tienda-backend:${{ github.sha }}
+          docker push $ECR_URL/tienda-backend:${{ github.sha }}
+
+      - name: Build y push DB
+        run: |
+          docker build -t tienda-db ./$PROJECT_DIR/db
+          docker tag tienda-db:latest $ECR_URL/tienda-db:${{ github.sha }}
+          docker push $ECR_URL/tienda-db:${{ github.sha }}
+
+      - name: Configurar kubeconfig EKS
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+      - name: Preparar manifests Kubernetes
+        run: |
+          cp -r $PROJECT_DIR/k8s ./k8s-rendered
+
+          sed -i "s|{{ECR_URL}}/tienda-frontend:eks-v1|$ECR_URL/tienda-frontend:${{ github.sha }}|g" ./k8s-rendered/frontend-deployment.yaml
+          sed -i "s|{{ECR_URL}}/tienda-backend:eks-v1|$ECR_URL/tienda-backend:${{ github.sha }}|g" ./k8s-rendered/backend-deployment.yaml
+          sed -i "s|{{ECR_URL}}/tienda-db:eks-v1|$ECR_URL/tienda-db:${{ github.sha }}|g" ./k8s-rendered/mysql-deployment.yaml
+
+      - name: Desplegar MySQL
+        run: |
+          kubectl apply -f ./k8s-rendered/namespace.yaml
+          kubectl apply -f ./k8s-rendered/mysql-secret.yaml
+          kubectl apply -f ./k8s-rendered/mysql-deployment.yaml
+          kubectl apply -f ./k8s-rendered/mysql-service.yaml
+          kubectl rollout status deployment/tienda-db -n $NAMESPACE --timeout=300s
+
+      - name: Desplegar Backend
+        run: |
+          kubectl apply -f ./k8s-rendered/backend-deployment.yaml
+          kubectl apply -f ./k8s-rendered/backend-service.yaml
+          kubectl rollout status deployment/tienda-backend -n $NAMESPACE --timeout=300s
+
+      - name: Desplegar Frontend
+        run: |
+          kubectl apply -f ./k8s-rendered/frontend-deployment.yaml
+          kubectl apply -f ./k8s-rendered/frontend-service.yaml
+          kubectl rollout status deployment/tienda-frontend -n $NAMESPACE --timeout=300s
+
+      - name: Aplicar Autoscaling HPA
+        run: |
+          kubectl apply -f ./k8s-rendered/backend-hpa.yaml
+          kubectl apply -f ./k8s-rendered/frontend-hpa.yaml
+
+      - name: Validar despliegue
+        run: |
+          kubectl get pods -n $NAMESPACE
+          kubectl get svc -n $NAMESPACE
+          kubectl get hpa -n $NAMESPACE
+          kubectl logs deployment/tienda-backend -n $NAMESPACE --tail=30
