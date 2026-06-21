@@ -3,7 +3,7 @@ name: EP3 Deploy Tienda Perritos to EKS
 on:
   push:
     branches:
-      - ep3-eks-cicd
+      - deploy
     paths:
       - "ep3-tienda-perritos/**"
       - ".github/workflows/deploy-ep3-eks.yml"
