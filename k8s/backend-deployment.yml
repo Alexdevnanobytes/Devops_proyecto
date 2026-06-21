@@ -18,6 +18,11 @@ spec:
         image: "209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-backend-ventas:eks-v1"
         ports:
         - containerPort: 8080
+        env:
+        - name: DB_ENDPOINT
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
         resources:
           limits:
             cpu: "500m"
