@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tienda-frontend
+  namespace: tienda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tienda-frontend
+  template:
+    metadata:
+      labels:
+        app: tienda-frontend
+    spec:
+      containers:
+      - name: tienda-frontend
+        image: "209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1"
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+          requests:
+            cpu: "150m"
+            memory: "128Mi"

@@ -1,4 +1,4 @@
-name: CI/CD Tienda Perritos - Frontend
+name: CI/CD Tienda Perritos - Frontend EKS
 
 on:
   push:
@@ -19,35 +19,41 @@ jobs:
     - name: Configurar credenciales AWS
       uses: aws-actions/configure-aws-credentials@v4
       with:
+        # Credenciales temporales de tu laboratorio de AWS Academy / Vocareum
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Crítico para el laboratorio
+        aws-region: us-east-1
 
     - name: Login en Amazon ECR (runner)
+      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build imagen Frontend y push a ECR
       run: |
+        # Compila la imagen usando la arquitectura x86 para los servidores de AWS EKS (linux/amd64)
         docker build \
+          --platform linux/amd64 \
           --build-arg VITE_API_VENTAS=${{ secrets.VITE_API_VENTAS }} \
           -t tienda-frontend ./front_despacho
         
-        docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
-        docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+        # Etiqueta la imagen con la URL de tu repositorio y la sube a la nube
+        docker tag tienda-frontend:latest 209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1
+        docker push 209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1
 
-    - name: Desplegar Frontend vía SSM
+    - name: Actualizar Kubeconfig para conectar con EKS
       run: |
-        aws ssm send-command \
-          --instance-ids ${{ secrets.EC2_FRONTEND_INSTANCE_ID }} \
-          --document-name "AWS-RunShellScript" \
-          --comment "Actualizar tienda-frontend desde ECR" \
-          --parameters '{"commands":[
-            "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin $(echo ${{ secrets.ECR_REPO_URL_FRONTEND }} | cut -d/ -f1)",
-            "sudo docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
-            "sudo docker stop tienda-frontend || true",
-            "sudo docker rm tienda-frontend || true",
-            "sudo docker run -d --name tienda-frontend -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
-          ]}' \
-          --output text
+        # Le dice al Runner de GitHub cómo conectarse de forma segura a tu clúster
+        aws eks update-kubeconfig --region us-east-1 --name tienda-eks
+
+    - name: Desplegar y Actualizar en EKS (Kubectl)
+      run: |
+        # Aplica los manifiestos por si hay cambios en el Service o Deployment
+        # Nota: Ajusta la ruta si tus archivos yaml están dentro de otra carpeta (ej: ./devops_proyecto/k8s/)
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/frontend-service.yaml
+        
+        # Fuerza a Kubernetes a descargar la nueva imagen y reiniciar los pods sin caídas de servicio
+        kubectl set image deployment/tienda-frontend tienda-frontend=209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1 -n tienda
+        kubectl rollout restart deployment/tienda-frontend -n tienda
