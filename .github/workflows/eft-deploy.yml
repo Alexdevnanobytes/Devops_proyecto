@@ -72,7 +72,6 @@ jobs:
         run: |
           kubectl apply -f ./k8s-rendered/namespace.yml || true
           kubectl apply -f ./k8s-rendered/mysql-secret.yml
-          kubectl apply -f ./k8s-rendered/mysql-pvc.yml
           kubectl apply -f ./k8s-rendered/mysql-deployment.yml
           kubectl apply -f ./k8s-rendered/mysql-service.yml
           kubectl rollout status deployment/tienda-db -n $NAMESPACE --timeout=300s
