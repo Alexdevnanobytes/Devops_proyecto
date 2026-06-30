@@ -39,8 +39,8 @@ jobs:
       - name: Build y push Frontend
         run: |
           docker build \
-            --build-arg VITE_API_VENTAS=${{ secrets.VITE_API_VENTAS }} \
-            --build-arg VITE_API_DESPACHOS=${{ secrets.VITE_API_DESPACHOS }} \
+            --build-arg VITE_API_VENTAS=/api/ventas \
+            --build-arg VITE_API_DESPACHOS=/api/despachos \
             -t tienda-frontend ./front_despacho
           docker tag tienda-frontend:latest $ECR_URL/tienda-frontend:${{ github.sha }}
           docker push $ECR_URL/tienda-frontend:${{ github.sha }}

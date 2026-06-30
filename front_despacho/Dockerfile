@@ -32,6 +32,18 @@ RUN printf 'server {\n\
         try_files $uri $uri/ /index.html;\n\
     }\n\
 \n\
+    location /api/ventas/ {\n\
+        proxy_pass http://backend-service:8080/;\n\
+        proxy_set_header Host $host;\n\
+        proxy_set_header X-Real-IP $remote_addr;\n\
+    }\n\
+\n\
+    location /api/despachos/ {\n\
+        proxy_pass http://backend-despachos-service:8081/;\n\
+        proxy_set_header Host $host;\n\
+        proxy_set_header X-Real-IP $remote_addr;\n\
+    }\n\
+\n\
     location ~* \\.(?:ico|css|js|gif|jpe?g|png|woff2?)$ {\n\
         expires 6M;\n\
         access_log off;\n\
