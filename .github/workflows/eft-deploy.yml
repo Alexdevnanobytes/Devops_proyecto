@@ -47,12 +47,14 @@ jobs:
 
       - name: Build y push Backend Ventas
         run: |
+          aws ecr describe-repositories --repository-names tienda-backend-ventas || aws ecr create-repository --repository-name tienda-backend-ventas
           docker build -t tienda-backend-ventas ./back-Ventas_SpringBoot/Springboot-API-REST
           docker tag tienda-backend-ventas:latest $ECR_URL/tienda-backend-ventas:${{ github.sha }}
           docker push $ECR_URL/tienda-backend-ventas:${{ github.sha }}
 
       - name: Build y push Backend Despachos
         run: |
+          aws ecr describe-repositories --repository-names tienda-backend-despachos || aws ecr create-repository --repository-name tienda-backend-despachos
           docker build -t tienda-backend-despachos ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
           docker tag tienda-backend-despachos:latest $ECR_URL/tienda-backend-despachos:${{ github.sha }}
           docker push $ECR_URL/tienda-backend-despachos:${{ github.sha }}
