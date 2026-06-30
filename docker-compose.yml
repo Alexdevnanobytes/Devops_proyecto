@@ -1,10 +1,13 @@
 services:
   frontend:
-    build: ./front_despacho
+    build: 
+      context: ./front_despacho
+      args:
+        VITE_API_VENTAS: http://localhost:8080
+        VITE_API_DESPACHOS: http://localhost:8081
     container_name: frontend
     ports:
       - "8082:80"
-
     depends_on:
       - backend-ventas
       - backend-despachos
@@ -14,23 +17,43 @@ services:
     container_name: backend-ventas
     ports:
       - "8080:8080"
-
     environment:
-      DB_ENDPOINT: ${DB_ENDPOINT}
-      DB_PORT: ${DB_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_ENDPOINT: mysql-db
+      DB_PORT: 3306
+      DB_NAME: tienda_ventas
+      DB_USERNAME: dany_user
+      DB_PASSWORD: superpassword
+    depends_on:
+      mysql-db:
+        condition: service_healthy
 
   backend-despachos:
     build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
     container_name: backend-despachos
     ports:
       - "8081:8081"
-
     environment:
-      DB_ENDPOINT: ${DB_ENDPOINT}
-      DB_PORT: ${DB_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_ENDPOINT: mysql-db
+      DB_PORT: 3306
+      DB_NAME: tienda_ventas
+      DB_USERNAME: dany_user
+      DB_PASSWORD: superpassword
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: tienda_ventas
+      MYSQL_USER: dany_user
+      MYSQL_PASSWORD: superpassword
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
