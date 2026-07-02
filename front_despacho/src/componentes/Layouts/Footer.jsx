@@ -1,6 +1,6 @@
 import React from "react";
 // 1. Importamos el logo usando una ruta relativa de desarrollo
-import logo1 from "../../assets/images/logo1.png"; 
+import logo1 from "../../assets/images/logo1.png";
 
 function Footer() {
   return (
@@ -20,7 +20,7 @@ function Footer() {
             <div>
               <h2 className="mb-6 text-sm font-semibold text-white uppercase dark:text-white">Condiciones servicio</h2>
               <ul className="text-white font-medium">
-                <li className="mb-4"><a href="#" className="hover:underline">Recomendaciones embalajeeeeee</a></li>
+                <li className="mb-4"><a href="#" className="hover:underline">Recomendaciones</a></li>
                 <li><a href="#" className="hover:underline">Cobertura</a></li>
               </ul>
             </div>
