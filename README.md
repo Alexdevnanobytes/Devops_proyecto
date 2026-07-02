@@ -4,7 +4,7 @@
   <img src="https://img.icons8.com/color/96/000000/amazon-web-services.png" alt="AWS"/>
   <img src="https://img.icons8.com/color/96/000000/spring-logo.png" alt="Spring Boot"/>
   <img src="https://img.icons8.com/color/96/000000/react-native.png" alt="React"/>
-  <h1 align="center">Evaluación Final Transversal (EFT) - Arquitectura DevOps & Cloud en EKS</h1>
+  <h1 align="center">Arquitectura DevOps & Cloud en EKS</h1>
 </p>
 
 
