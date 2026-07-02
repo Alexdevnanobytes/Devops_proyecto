@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tienda-backend
+  namespace: tienda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tienda-backend
+  template:
+    metadata:
+      labels:
+        app: tienda-backend
+    spec:
+      containers:
+      - name: tienda-backend
+        image: "209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-backend-ventas:eks-v1"
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_ENDPOINT
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "tienda_ventas"
+        - name: DB_USERNAME
+          value: "dany_user"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"

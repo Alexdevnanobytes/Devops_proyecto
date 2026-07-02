@@ -1,5 +1,6 @@
 import React from "react";
-import logo1 from "../../assets/images/logo2.png";
+// 1. Importamos el logo usando una ruta relativa de desarrollo
+import logo1 from "../../assets/images/logo1.png";
 
 function Footer() {
   return (
@@ -9,60 +10,32 @@ function Footer() {
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex items-center">
               <div className="flex justify-center mb-4">
+                {/* 2. Usamos la variable entre llaves */}
                 <img src={logo1} alt="Logo" className="w-20 h-20" />
               </div>
             </a>
           </div>
+          {/* El resto de tu código del footer sigue exactamente igual... */}
           <div className="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3">
             <div>
-              <h2 className="mb-6 text-sm font-semibold text-white uppercase dark:text-white">
-                Condiciones servicio
-              </h2>
+              <h2 className="mb-6 text-sm font-semibold text-white uppercase dark:text-white">Condiciones servicio</h2>
               <ul className="text-white font-medium">
-                <li className="mb-4">
-                  <a href="#" className="hover:underline">
-                    Recomendaciones embalaje
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Cobertura
-                  </a>
-                </li>
+                <li className="mb-4"><a href="#" className="hover:underline">Recomendaciones</a></li>
+                <li><a href="#" className="hover:underline">Cobertura</a></li>
               </ul>
             </div>
             <div>
-              <h2 className="mb-6 text-sm font-semibold  uppercase dark:text-white">
-                Siguenos
-              </h2>
-              <ul className=" text-white">
-                <li className="mb-4">
-                  <a href="#" className="hover:underline ">
-                    Instagram
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Facebook
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h2 className="mb-6 text-sm font-semibold text-white uppercase dark:text-white">
-                Legal
-              </h2>
+              <h2 className="mb-6 text-sm font-semibold uppercase dark:text-white">Siguenos</h2>
               <ul className="text-white">
-                <li className="mb-4">
-                  <a href="#" className="hover:underline">
-                    Condiciones de privacidad
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Terminos &amp; Condiciones
-                  </a>
-                </li>
+                <li className="mb-4"><a href="#" className="hover:underline">Instagram</a></li>
+                <li><a href="#" className="hover:underline">Facebook</a></li>
+              </ul>
+            </div>
+            <div>
+              <h2 className="mb-6 text-sm font-semibold text-white uppercase dark:text-white">Legal</h2>
+              <ul className="text-white">
+                <li className="mb-4"><a href="#" className="hover:underline">Condiciones de privacidad</a></li>
+                <li><a href="#" className="hover:underline">Terminos &amp; Condiciones</a></li>
               </ul>
             </div>
           </div>
@@ -70,11 +43,7 @@ function Footer() {
         <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
         <div className="sm:flex sm:items-center sm:justify-between">
           <span className="text-sm text-gray-800 dark:text-gray-800 sm:text-center">
-            © 2024{" "}
-            <a href="#" className="hover:underline">
-              ITPCARGO™
-            </a>
-            . Todos los derechos reservados.
+            © 2024 <a href="#" className="hover:underline">ITPCARGO™</a>. Todos los derechos reservados.
           </span>
         </div>
       </div>

@@ -1,0 +1,106 @@
+name: EFT Deploy to EKS
+
+on:
+  push:
+    branches:
+      - deploy
+      - Deploy
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: devopseks
+  NAMESPACE: tienda
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Obtener Account ID y ECR URL
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ECR_URL=$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Login en Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URL
+
+      - name: Build y push Frontend
+        run: |
+          docker build \
+            --build-arg VITE_API_VENTAS=/api/ventas \
+            --build-arg VITE_API_DESPACHOS=/api/despachos \
+            -t tienda-frontend ./front_despacho
+          docker tag tienda-frontend:latest $ECR_URL/tienda-frontend:${{ github.sha }}
+          docker push $ECR_URL/tienda-frontend:${{ github.sha }}
+
+      - name: Build y push Backend Ventas
+        run: |
+          docker build -t tienda-backend-ventas ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker tag tienda-backend-ventas:latest $ECR_URL/tienda-backend:ventas-${{ github.sha }}
+          docker push $ECR_URL/tienda-backend:ventas-${{ github.sha }}
+
+      - name: Build y push Backend Despachos
+        run: |
+          docker build -t tienda-backend-despachos ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker tag tienda-backend-despachos:latest $ECR_URL/tienda-backend:despachos-${{ github.sha }}
+          docker push $ECR_URL/tienda-backend:despachos-${{ github.sha }}
+
+      - name: Configurar kubeconfig EKS
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+      - name: Preparar manifests Kubernetes
+        run: |
+          cp -r ./k8s ./k8s-rendered
+          sed -i "s|209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1|$ECR_URL/tienda-frontend:${{ github.sha }}|g" ./k8s-rendered/frontend-deployment.yml
+          sed -i "s|209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-backend-ventas:eks-v1|$ECR_URL/tienda-backend:ventas-${{ github.sha }}|g" ./k8s-rendered/backend-deployment.yml
+          sed -i "s|209679629646.dkr.ecr.us-east-1.amazonaws.com/tienda-backend-despachos:eks-v1|$ECR_URL/tienda-backend:despachos-${{ github.sha }}|g" ./k8s-rendered/backend-despachos-deployment.yml
+
+      - name: Desplegar Base de Datos (MySQL)
+        run: |
+          kubectl apply -f ./k8s-rendered/namespace.yml || true
+          kubectl apply -f ./k8s-rendered/mysql-secret.yml
+          kubectl apply -f ./k8s-rendered/mysql-deployment.yml
+          kubectl apply -f ./k8s-rendered/mysql-service.yml
+          kubectl rollout status deployment/tienda-db -n $NAMESPACE --timeout=300s
+
+      - name: Desplegar Backend Ventas
+        run: |
+          kubectl apply -f ./k8s-rendered/backend-deployment.yml
+          kubectl apply -f ./k8s-rendered/backend-service.yml
+          kubectl rollout status deployment/tienda-backend -n $NAMESPACE --timeout=300s
+
+      - name: Desplegar Backend Despachos
+        run: |
+          kubectl apply -f ./k8s-rendered/backend-despachos-deployment.yml
+          kubectl apply -f ./k8s-rendered/backend-despachos-service.yml
+          kubectl rollout status deployment/tienda-backend-despachos -n $NAMESPACE --timeout=300s
+
+      - name: Desplegar Frontend
+        run: |
+          kubectl apply -f ./k8s-rendered/frontend-deployment.yml
+          kubectl apply -f ./k8s-rendered/frontend-service.yml
+          kubectl rollout status deployment/tienda-frontend -n $NAMESPACE --timeout=300s
+
+      - name: Aplicar Autoscaling HPA
+        run: |
+          kubectl apply -f ./k8s-rendered/backend-hpa.yml || true
+          kubectl apply -f ./k8s-rendered/frontend-hpa.yml || true
+
+      - name: Validar estado del Clúster
+        run: |
+          kubectl get pods -n $NAMESPACE
+          kubectl get svc -n $NAMESPACE
+          kubectl get hpa -n $NAMESPACE
