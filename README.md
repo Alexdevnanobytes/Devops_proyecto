@@ -7,8 +7,6 @@
   <h1 align="center">Evaluación Final Transversal (EFT) - Arquitectura DevOps & Cloud en EKS</h1>
 </p>
 
-## 🎥 Video de Defensa
-[**Haz clic aquí para ver el video explicativo de la arquitectura y despliegue**](#) *(Reemplazar con enlace a YouTube)*
 
 ## 📝 Resumen de la Arquitectura
 Este repositorio contiene la solución técnica automatizada para el ciclo de integración y despliegue continuo (CI/CD) de la plataforma E-commerce "Tienda de Perritos". El ecosistema ha evolucionado a una **arquitectura real de microservicios** contenerizada, desplegada en AWS y orquestada en producción con **Amazon EKS (Elastic Kubernetes Service)**.
